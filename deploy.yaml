@@ -1,0 +1,64 @@
+version: "3.7"
+
+services:
+  oauth2-proxy:
+    image: bitnami/oauth2-proxy:7.3.0
+    container_name: oauth2-proxy1
+    command:
+      - --http-address
+      - 0.0.0.0:4180 
+    environment:
+      OAUTH2_PROXY_UPSTREAMS: http://nginx1/
+      OAUTH2_PROXY_PROVIDER_DISPLAY_NAME: Keycloak
+      OAUTH2_PROXY_PROVIDER: keycloak-oidc 
+      OAUTH2_PROXY_OIDC_ISSUER_URL: http://${keycloakIP}:7080/auth/realms/Test1
+      OAUTH2_PROXY_CLIENT_ID: nginx
+      OAUTH2_PROXY_CLIENT_SECRET: xzwfZ9vzJBFntl0jiESPJGvRBj6UPpxT
+      OAUTH2_PROXY_PASS_ACCESS_TOKEN: true
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: true      
+      OAUTH2_PROXY_EMAIL_DOMAINS: '*' 
+      OAUTH2_PROXY_REDIRECT_URL: http://${keycloakIP}:4180/oauth2/callback 
+      OAUTH2_PROXY_COOKIE_SECRET: cYW8ox+3ySQZ5M+92hsZhnUqiQqM5U7B
+      OAUTH2_PROXY_SKIP_OIDC_DISCOVERY: true
+      OAUTH2_PROXY_COOKIE_SECURE: false
+      OAUTH2_PROXY_LOGIN_URL: http://${keycloakIP}:7080/auth/realms/Test1/protocol/openid-connect/auth
+      OAUTH2_PROXY_REDEEM_URL: http://${keycloakIP}:7080/auth/realms/Test1/protocol/openid-connect/token
+      OAUTH2_PROXY_OIDC_JWKS_URL: http://${keycloakIP}:7080/auth/realms/Test1/protocol/openid-connect/certs
+      OAUTH2_PROXY_COOKIE_CSRF_PER_REQUEST: true
+      
+
+    ports:
+      - 4180:4180 
+    
+    depends_on:
+      - keycloak
+      
+
+  keycloak:
+    image: jboss/keycloak
+    hostname: keycloak1
+    domainname: keycloak1.local
+    container_name: keycloak1
+  
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin123
+      KEYCLOAK_IMPORT: /tmp/realm-export.json
+      
+      
+    volumes:
+      - "./keycloak/initial.json:/tmp/realm-export.json"
+
+    ports:
+      - 7080:8080 
+    
+  nginx1:
+    image: nginx
+    hostname: nginx1
+    domainname: nginx1.local
+    container_name: nginx1
+      
+      
+    volumes:
+      - "./web/congrats.html:/usr/share/nginx/html/congrats.html"
+       
